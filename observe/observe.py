@@ -563,8 +563,12 @@ class Observe(QMainWindow):
                 return "ERROR selecting script file"
 
         if number_cycles == "prompt":
-            self.number_cycles = azcam.db.genpars.get_par("observe", 
-                "number_cycles", "prompt", "Enter number of cycles to run script", number_cycles,
+            self.number_cycles = azcam.db.genpars.get_par(
+                "observe",
+                "number_cycles",
+                "prompt",
+                "Enter number of cycles to run script",
+                number_cycles,
             )
         else:
             self.number_cycles = number_cycles  # use value specified
@@ -598,7 +602,7 @@ class Observe(QMainWindow):
 
         # save pars to be changed
         impars = {}
-        azcam.api.save_imagepars(impars)
+        azcam.console.api.save_imagepars(impars)
 
         # log start info
         s = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -614,7 +618,7 @@ class Observe(QMainWindow):
             # open output file
             with open(self.out_file, "w") as ofile:
                 if not ofile:
-                    azcam.api.restore_imagepars(impars)
+                    azcam.console.api.restore_imagepars(impars)
                     self.log("could not open script output file %s" % self.out_file)
                     return "ERROR"
 
@@ -686,7 +690,7 @@ class Observe(QMainWindow):
             pass
 
         # finish
-        azcam.api.restore_imagepars(impars)
+        azcam.console.api.restore_imagepars(impars)
         self._abort_script = 0  # clear abort status
 
         return
@@ -773,7 +777,7 @@ class Observe(QMainWindow):
             pass
 
         elif cmd == "stepfocus":
-            reply = azcam.api.step_focus(arg)
+            reply = azcam.console.api.step_focus(arg)
 
         elif cmd == "movefilter":
             pass
@@ -791,7 +795,7 @@ class Observe(QMainWindow):
         elif cmd == "steptel":
             self.log("offsetting telescope in arcsecs - RA: %s, DEC: %s" % (raoffset, decoffset))
             try:
-                reply = azcam.api.rcommand(f"telescope.offset {raoffset} {decoffset}")
+                reply = azcam.console.api.rcommand(f"telescope.offset {raoffset} {decoffset}")
             except azcam.AzCamError as e:
                 return f"ERROR {e}"
             if azcam.utils.check_reply(reply):
@@ -805,7 +809,7 @@ class Observe(QMainWindow):
 
         elif cmd == "azcam":
             try:
-                reply = azcam.api.rcommand(arg)
+                reply = azcam.console.api.rcommand(arg)
             except azcam.AzCamError as e:
                 return f"ERROR {e}"
             return reply
@@ -831,12 +835,12 @@ class Observe(QMainWindow):
         if movefocus_flag:
             self.log("Moving to focus: %s" % focus)
             if not self.DummyMode:
-                reply = azcam.api.set_focus(focus)
+                reply = azcam.console.api.set_focus(focus)
                 # reply, stop = check_exit(reply, 1)
                 stop = self._abort_gui
                 if stop:
                     return "STOP"
-                reply = azcam.api.get_focus()
+                reply = azcam.console.api.get_focus()
                 self.log("Focus reply:: %s" % repr(reply))
                 # reply, stop = check_exit(reply, 1)
                 stop = self._abort_gui
@@ -848,11 +852,11 @@ class Observe(QMainWindow):
             if wave != self.current_filter:
                 self.log("Moving to filter: %s" % wave)
                 if not self.debug:
-                    reply = azcam.api.set_filter(wave)
+                    reply = azcam.console.api.set_filter(wave)
                     if azcam.utils.check_reply(reply):
                         self.log("ERROR setting filter: %s" % reply)
 
-                    reply = azcam.api.get_filter()
+                    reply = azcam.console.api.get_filter()
                     if azcam.utils.check_reply(reply):
                         self.log("ERROR reading filter: %s" % reply)
                     self.current_filter = reply
@@ -864,7 +868,7 @@ class Observe(QMainWindow):
             self.log("Moving telescope now to RA: %s, DEC: %s" % (ra, dec))
             if not self.debug:
                 try:
-                    reply = azcam.api.rcommand(f"telescope.move {ra} {dec} {epoch}")
+                    reply = azcam.console.api.rcommand(f"telescope.move {ra} {dec} {epoch}")
                 except azcam.AzCamError as e:
                     return f"ERROR {e}"
                 if azcam.utils.check_reply(reply):
@@ -886,10 +890,10 @@ class Observe(QMainWindow):
                             return "STOP"
 
                 if cmd != "test":
-                    azcam.api.set_par("imagetest", 0)
+                    azcam.console.api.set_par("imagetest", 0)
                 else:
-                    azcam.api.set_par("imagetest", 1)
-                filename = azcam.api.get_image_filename()
+                    azcam.console.api.set_par("imagetest", 1)
+                filename = azcam.console.api.get_image_filename()
 
                 if cmd == "test":
                     self.log(
@@ -911,11 +915,13 @@ class Observe(QMainWindow):
 
                     if 1:
                         # if not self.debug:
-                        reply = azcam.api.expose1(exptime, imagetype, title)  # immediate return
+                        reply = azcam.console.api.expose1(
+                            exptime, imagetype, title
+                        )  # immediate return
                         time.sleep(2)  # wait for Expose process to start
                         cycle = 1
                         while 1:
-                            flag = azcam.api.get_par("ExposureFlag")
+                            flag = azcam.console.api.get_par("ExposureFlag")
                             if flag is None:
                                 self.log("Could not get exposure status, quitting...")
                                 stop = 1
@@ -931,7 +937,7 @@ class Observe(QMainWindow):
                                     check_header = 1
                                     while check_header:
                                         header_updating = int(
-                                            azcam.api.get_par("exposureupdatingheader")
+                                            azcam.console.api.get_par("exposureupdatingheader")
                                         )
                                         if header_updating:
                                             self.log("Waiting for header to finish updating...")
@@ -943,7 +949,7 @@ class Observe(QMainWindow):
                                         % (raNext, decNext)
                                     )
                                     try:
-                                        reply = azcam.api.rcommand(
+                                        reply = azcam.console.api.rcommand(
                                             "telescope.move_start %s %s %s"
                                             % (raNext, decNext, epochNext)
                                         )
@@ -960,7 +966,7 @@ class Observe(QMainWindow):
                             cycle += 1
                 else:
                     if not self.debug:
-                        reply = azcam.api.expose(exptime, imagetype, title)
+                        reply = azcam.console.api.expose(exptime, imagetype, title)
                         if azcam.utils.check_reply(reply):
                             self.log("exposure reply: %s" % reply)
 
@@ -1045,7 +1051,7 @@ class Observe(QMainWindow):
         self.status("Run finished")  # clear status box
 
         # save pars
-        azcam.utils.update_pars(1, "observe")
+        # azcam.utils.update_pars(1, "observe")
         azcam.db.genpars.parfile_write()
 
         return
