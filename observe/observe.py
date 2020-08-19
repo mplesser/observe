@@ -574,20 +574,12 @@ class Observe(QMainWindow):
             self.number_cycles = number_cycles  # use value specified
         self.number_cycles = int(self.number_cycles)
 
-        # read the script
-        reply = self.read_file(script_file)
-        if azcam.utils.check_reply(reply):
-            return reply
-
-        # parse the script
-        reply = self.parse()
-        if azcam.utils.check_reply(reply):
-            return reply
+        # read and parse the script
+        self.read_file(script_file)
+        self.parse()
 
         # execute the commands
-        reply = self.run()
-        if azcam.utils.check_reply(reply):
-            return reply
+        self.run()
 
         return
 
@@ -620,7 +612,8 @@ class Observe(QMainWindow):
                 if not ofile:
                     azcam.console.api.restore_imagepars(impars)
                     self.log("could not open script output file %s" % self.out_file)
-                    return "ERROR"
+                    azcam.AzcamWarning("could not open script output file")
+                    return
 
                 for linenumber, command in enumerate(self.commands):
 
@@ -682,12 +675,6 @@ class Observe(QMainWindow):
                     line = self.commands[i]["line"]
                     line = line.strip()
                     ofile.write(line + "\n")
-
-        # make sure files are closed on abort
-        try:
-            ofile.close()
-        except Exception:
-            pass
 
         # finish
         azcam.console.api.restore_imagepars(impars)
@@ -796,12 +783,9 @@ class Observe(QMainWindow):
             self.log("offsetting telescope in arcsecs - RA: %s, DEC: %s" % (raoffset, decoffset))
             try:
                 reply = azcam.console.api.rcommand(f"telescope.offset {raoffset} {decoffset}")
-            except azcam.AzCamError as e:
-                return f"ERROR {e}"
-            if azcam.utils.check_reply(reply):
-                return reply
-            else:
                 return "OK"
+            except azcam.AzcamError as e:
+                return f"ERROR {e}"
 
         elif cmd == "delay":
             time.sleep(float(arg))
@@ -810,9 +794,9 @@ class Observe(QMainWindow):
         elif cmd == "azcam":
             try:
                 reply = azcam.console.api.rcommand(arg)
-            except azcam.AzCamError as e:
+                return reply
+            except azcam.AzcamError as e:
                 return f"ERROR {e}"
-            return reply
 
         elif cmd == "print":
             self.log(arg)
@@ -852,13 +836,8 @@ class Observe(QMainWindow):
             if wave != self.current_filter:
                 self.log("Moving to filter: %s" % wave)
                 if not self.debug:
-                    reply = azcam.console.api.set_filter(wave)
-                    if azcam.utils.check_reply(reply):
-                        self.log("ERROR setting filter: %s" % reply)
-
+                    azcam.console.api.set_filter(wave)
                     reply = azcam.console.api.get_filter()
-                    if azcam.utils.check_reply(reply):
-                        self.log("ERROR reading filter: %s" % reply)
                     self.current_filter = reply
             else:
                 self.log("Filter %s already in beam" % self.current_filter)
@@ -869,10 +848,8 @@ class Observe(QMainWindow):
             if not self.debug:
                 try:
                     reply = azcam.console.api.rcommand(f"telescope.move {ra} {dec} {epoch}")
-                except azcam.AzCamError as e:
+                except azcam.AzcamError as e:
                     return f"ERROR {e}"
-                if azcam.utils.check_reply(reply):
-                    return reply
 
         # make exposure
         if expose_flag:
@@ -953,7 +930,7 @@ class Observe(QMainWindow):
                                             "telescope.move_start %s %s %s"
                                             % (raNext, decNext, epochNext)
                                         )
-                                    except azcam.AzCamError as e:
+                                    except azcam.AzcamError as e:
                                         return f"ERROR {e}"
                                     doMove = 0
                             elif flag == azcam.db.exposureflags["WRITING"]:
@@ -966,9 +943,7 @@ class Observe(QMainWindow):
                             cycle += 1
                 else:
                     if not self.debug:
-                        reply = azcam.console.api.expose(exptime, imagetype, title)
-                        if azcam.utils.check_reply(reply):
-                            self.log("exposure reply: %s" % reply)
+                        azcam.console.api.expose(exptime, imagetype, title)
 
                 # reply, stop = check_exit(reply)
                 stop = self._abort_gui
