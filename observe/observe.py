@@ -393,7 +393,7 @@ class Observe(QMainWindow):
                 pass
 
             else:
-                azcam.utils.log("command not recognized on line %03d: %s" % (linenumber, cmd))
+                azcam.log("command not recognized on line %03d: %s" % (linenumber, cmd))
 
             # get next RA and DEC if next line is obs command
             raNext = ""
@@ -529,7 +529,7 @@ class Observe(QMainWindow):
         :return: None
         """
 
-        azcam.utils.log(message)
+        azcam.log(message)
 
         return
 
