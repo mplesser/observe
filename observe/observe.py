@@ -8,6 +8,7 @@ IPython config needs:
 """
 
 import os
+import sys
 import time
 
 from PySide2 import QtGui, QtCore
@@ -1232,3 +1233,13 @@ class Observe(QMainWindow):
         self._abort_gui = 1
 
         return
+
+
+# ****************************************************************
+# create Qt app
+# ****************************************************************
+if azcam.db.get("atapp") is None:
+    app = QtCore.QCoreApplication.instance()
+    if app is None:
+        app = QApplication(sys.argv)
+    azcam.db.qtapp = app
