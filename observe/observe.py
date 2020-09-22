@@ -961,6 +961,10 @@ class Observe(QMainWindow):
                 if stop:
                     return "STOP"
 
+                keyhit = azcam.utils.check_keyboard(0)
+                if keyhit == "q":
+                    return "QUIT"
+
         return "OK"
 
     def _watchdog(self):
