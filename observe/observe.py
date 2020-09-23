@@ -1252,7 +1252,7 @@ class Observe(QMainWindow):
 # ****************************************************************
 # create Qt app
 # ****************************************************************
-if azcam.db.get("atapp") is None:
+if azcam.db.get("qtapp") is None:
     app = QtCore.QCoreApplication.instance()
     if app is None:
         app = QApplication(sys.argv)
