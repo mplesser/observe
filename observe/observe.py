@@ -637,6 +637,7 @@ class Observe(QMainWindow):
                     keyhit = azcam.utils.check_keyboard(0)
                     if keyhit == "q":
                         reply = "QUIT"
+                        stop = 1
 
                     if reply == "STOP":
                         self.log("STOP after line %d" % linenumber)
