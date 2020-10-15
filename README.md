@@ -1,6 +1,6 @@
 # observe
 
-*observe* is an azcam package for running observing scripts. It can be used
+*observe* is an *azcam* extension for running observing scripts. It can be used
 with a Qt-based GUI or with a command line interface. The Qt GUI uses the *PySide2* package.
 
 ### observe command
