@@ -1,6 +1,5 @@
 # local
 *.code-workspace
-git_*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="observe",
+    name="azcam-observe",
     version="20.1",
     description="azcam add-on package for running observing scripts",
     long_description=long_description,
