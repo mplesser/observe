@@ -11,17 +11,13 @@ import os
 import sys
 import time
 
-from PySide2 import QtGui, QtCore
-from PySide2.QtWidgets import (
-    QFileDialog,
-    QMainWindow,
-    QWidget,
-    QTableWidgetItem,
-    QApplication,
-)
+from PySide2 import QtCore, QtGui
 from PySide2.QtCore import QTimer, Signal, Slot
+from PySide2.QtWidgets import (QApplication, QFileDialog, QMainWindow,
+                               QTableWidgetItem, QWidget)
 
 import azcam
+
 from .observe_gui_ui import Ui_observe
 
 
