@@ -13,10 +13,15 @@ import time
 
 from PySide2 import QtCore, QtGui
 from PySide2.QtCore import QTimer, Signal, Slot
-from PySide2.QtWidgets import (QApplication, QFileDialog, QMainWindow,
-                               QTableWidgetItem, QWidget)
+from PySide2.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QMainWindow,
+    QTableWidgetItem,
+    QWidget,
+)
 
-import azcam
+from azcam.console import azcam
 
 from .observe_gui_ui import Ui_observe
 
@@ -85,6 +90,9 @@ class Observe(QMainWindow):
         self.data = []  # list of dictionaries for each command to be executed
 
         self.threadPool = []
+
+        # focus component for motion - instrument or telescope
+        self.focus_component = "instrument"
 
         self.GuiMode = 1
 
@@ -210,6 +218,25 @@ class Observe(QMainWindow):
         print("")
 
         return
+
+    def _get_focus(
+        self,
+        focus_id: int = 0,
+    ) -> float:
+
+        if self.focus_component == "instrument":
+            return azcam.api.instrument.get_focus(focus_id)
+        elif self.focus_component == "telescope":
+            return azcam.api.telescope.get_focus(focus_id)
+
+    def _set_focus(
+        self, focus_value: float, focus_id: int = 0, focus_type: str = "absolute"
+    ):
+
+        if self.focus_component == "instrument":
+            return azcam.api.instrument.set_focus(focus_value, focus_id, focus_type)
+        elif self.focus_component == "telescope":
+            return azcam.api.telescope.set_focus(focus_value, focus_id, focus_type)
 
     def read_file(self, script_file="prompt"):
         """
@@ -611,7 +638,7 @@ class Observe(QMainWindow):
 
         # save pars to be changed
         impars = {}
-        azcam.console.api.save_imagepars(impars)
+        azcam.api.save_imagepars(impars)
 
         # log start info
         s = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -629,7 +656,7 @@ class Observe(QMainWindow):
             # open output file
             with open(self.out_file, "w") as ofile:
                 if not ofile:
-                    azcam.console.api.restore_imagepars(impars)
+                    azcam.api.restore_imagepars(impars)
                     self.log("could not open script output file %s" % self.out_file)
                     azcam.AzcamWarning("could not open script output file")
                     return
@@ -703,7 +730,7 @@ class Observe(QMainWindow):
                     ofile.write(line + "\n")
 
         # finish
-        azcam.console.api.restore_imagepars(impars)
+        azcam.api.restore_imagepars(impars)
         self._abort_script = 0  # clear abort status
 
         return
@@ -790,7 +817,7 @@ class Observe(QMainWindow):
             pass
 
         elif cmd == "stepfocus":
-            reply = azcam.console.api.step_focus(arg)
+            reply = azcam.api.step_focus(arg)
 
         elif cmd == "movefilter":
             pass
@@ -811,9 +838,7 @@ class Observe(QMainWindow):
                 % (raoffset, decoffset)
             )
             try:
-                reply = azcam.console.api.rcommand(
-                    f"telescope.offset {raoffset} {decoffset}"
-                )
+                reply = azcam.api.rcommand(f"telescope.offset {raoffset} {decoffset}")
                 return "OK"
             except azcam.AzcamError as e:
                 return f"ERROR {e}"
@@ -824,7 +849,7 @@ class Observe(QMainWindow):
 
         elif cmd == "azcam":
             try:
-                reply = azcam.console.api.rcommand(arg)
+                reply = azcam.api.rcommand(arg)
                 return reply
             except azcam.AzcamError as e:
                 return f"ERROR {e}"
@@ -850,12 +875,12 @@ class Observe(QMainWindow):
         if movefocus_flag:
             self.log("Moving to focus: %s" % focus)
             if not self.DummyMode:
-                reply = azcam.console.api.set_focus(focus)
+                reply = self._set_focus(focus)
                 # reply, stop = check_exit(reply, 1)
                 stop = self._abort_gui
                 if stop:
                     return "STOP"
-                reply = azcam.console.api.get_focus()
+                reply = self._get_focus()
                 self.log("Focus reply:: %s" % repr(reply))
                 # reply, stop = check_exit(reply, 1)
                 stop = self._abort_gui
@@ -867,8 +892,8 @@ class Observe(QMainWindow):
             if wave != self.current_filter:
                 self.log("Moving to filter: %s" % wave)
                 if not self.debug:
-                    azcam.console.api.set_filter(wave)
-                    reply = azcam.console.api.get_filter()
+                    azcam.api.instrument.set_filter(wave)
+                    reply = azcam.api.instrument.get_filter()
                     self.current_filter = reply
             else:
                 self.log("Filter %s already in beam" % self.current_filter)
@@ -878,9 +903,7 @@ class Observe(QMainWindow):
             self.log("Moving telescope now to RA: %s, DEC: %s" % (ra, dec))
             if not self.debug:
                 try:
-                    reply = azcam.console.api.rcommand(
-                        f"telescope.move {ra} {dec} {epoch}"
-                    )
+                    reply = azcam.api.rcommand(f"telescope.move {ra} {dec} {epoch}")
                 except azcam.AzcamError as e:
                     return f"ERROR {e}"
 
@@ -900,10 +923,10 @@ class Observe(QMainWindow):
                             return "STOP"
 
                 if cmd != "test":
-                    azcam.console.api.set_par("imagetest", 0)
+                    azcam.api.exposure.set_par("imagetest", 0)
                 else:
-                    azcam.console.api.set_par("imagetest", 1)
-                filename = azcam.console.api.get_image_filename()
+                    azcam.api.exposure.set_par("imagetest", 1)
+                filename = azcam.api.exposure.get_image_filename()
 
                 if cmd == "test":
                     self.log(
@@ -925,13 +948,13 @@ class Observe(QMainWindow):
 
                     if 1:
                         # if not self.debug:
-                        reply = azcam.console.api.expose1(
+                        reply = azcam.api.exposure.expose1(
                             exptime, imagetype, title
                         )  # immediate return
                         time.sleep(2)  # wait for Expose process to start
                         cycle = 1
                         while 1:
-                            flag = azcam.console.api.get_par("ExposureFlag")
+                            flag = azcam.api.exposure.get_par("ExposureFlag")
                             if flag is None:
                                 self.log("Could not get exposure status, quitting...")
                                 stop = 1
@@ -947,7 +970,7 @@ class Observe(QMainWindow):
                                     check_header = 1
                                     while check_header:
                                         header_updating = int(
-                                            azcam.console.api.get_par(
+                                            azcam.api.exposure.get_par(
                                                 "exposureupdatingheader"
                                             )
                                         )
@@ -963,7 +986,7 @@ class Observe(QMainWindow):
                                         % (raNext, decNext)
                                     )
                                     try:
-                                        reply = azcam.console.api.rcommand(
+                                        reply = azcam.api.rcommand(
                                             "telescope.move_start %s %s %s"
                                             % (raNext, decNext, epochNext)
                                         )
@@ -980,7 +1003,7 @@ class Observe(QMainWindow):
                             cycle += 1
                 else:
                     if not self.debug:
-                        azcam.console.api.expose(exptime, imagetype, title)
+                        azcam.api.exposure.expose(exptime, imagetype, title)
 
                 # reply, stop = check_exit(reply)
                 stop = self._abort_gui
