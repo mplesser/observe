@@ -838,7 +838,9 @@ class Observe(QMainWindow):
                 % (raoffset, decoffset)
             )
             try:
-                reply = azcam.api.rcommand(f"telescope.offset {raoffset} {decoffset}")
+                reply = azcam.api.serverconn.rcommand(
+                    f"telescope.offset {raoffset} {decoffset}"
+                )
                 return "OK"
             except azcam.AzcamError as e:
                 return f"ERROR {e}"
@@ -849,7 +851,7 @@ class Observe(QMainWindow):
 
         elif cmd == "azcam":
             try:
-                reply = azcam.api.rcommand(arg)
+                reply = azcam.api.serverconn.rcommand(arg)
                 return reply
             except azcam.AzcamError as e:
                 return f"ERROR {e}"
@@ -903,7 +905,9 @@ class Observe(QMainWindow):
             self.log("Moving telescope now to RA: %s, DEC: %s" % (ra, dec))
             if not self.debug:
                 try:
-                    reply = azcam.api.rcommand(f"telescope.move {ra} {dec} {epoch}")
+                    reply = azcam.api.serverconn.rcommand(
+                        f"telescope.move {ra} {dec} {epoch}"
+                    )
                 except azcam.AzcamError as e:
                     return f"ERROR {e}"
 
@@ -986,7 +990,7 @@ class Observe(QMainWindow):
                                         % (raNext, decNext)
                                     )
                                     try:
-                                        reply = azcam.api.rcommand(
+                                        reply = azcam.api.serverconn.rcommand(
                                             "telescope.move_start %s %s %s"
                                             % (raNext, decNext, epochNext)
                                         )
