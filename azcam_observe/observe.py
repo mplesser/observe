@@ -638,7 +638,7 @@ class Observe(QMainWindow):
 
         # save pars to be changed
         impars = {}
-        azcam.api.save_imagepars(impars)
+        azcam.utils.save_imagepars(impars)
 
         # log start info
         s = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -656,7 +656,7 @@ class Observe(QMainWindow):
             # open output file
             with open(self.out_file, "w") as ofile:
                 if not ofile:
-                    azcam.api.restore_imagepars(impars)
+                    azcam.utils.restore_imagepars(impars)
                     self.log("could not open script output file %s" % self.out_file)
                     azcam.AzcamWarning("could not open script output file")
                     return
@@ -730,7 +730,7 @@ class Observe(QMainWindow):
                     ofile.write(line + "\n")
 
         # finish
-        azcam.api.restore_imagepars(impars)
+        azcam.utils.restore_imagepars(impars)
         self._abort_script = 0  # clear abort status
 
         return
