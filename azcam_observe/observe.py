@@ -15,7 +15,7 @@ from PySide2 import QtCore, QtGui
 from PySide2.QtCore import QTimer, Signal, Slot
 from PySide2.QtWidgets import QApplication, QFileDialog, QMainWindow, QTableWidgetItem
 
-from azcam.console import azcam
+import azcam
 from .observe_gui_ui import Ui_observe
 
 
@@ -212,10 +212,7 @@ class Observe(QMainWindow):
 
         return
 
-    def _get_focus(
-        self,
-        focus_id: int = 0,
-    ) -> float:
+    def _get_focus(self, focus_id: int = 0,) -> float:
 
         if self.focus_component == "instrument":
             return azcam.api.instrument.get_focus(focus_id)
