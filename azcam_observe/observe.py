@@ -53,12 +53,8 @@ class Observe(QMainWindow):
         self.debug = 0  #: True to NOT execute commands
         self.verbose = 1  #: True to print commands during run()
         self.number_cycles = 1  #: Number of times to run the script.
-        self.move_telescope_during_readout = (
-            0  #: True to move the telescope during camera readout
-        )
-        self.increment_status = (
-            0  #: True to increment status count if command in completed
-        )
+        self.move_telescope_during_readout = 0  #: True to move the telescope during camera readout
+        self.increment_status = 0  #: True to increment status count if command in completed
 
         self.script_file = ""  #: filename of observing commands cript file
         self.out_file = ""  #: output file showing executed commands
@@ -132,14 +128,12 @@ class Observe(QMainWindow):
         self.timer.start(500)
 
         # set defaults from parfile
-        self.script_file = azcam.db.genpars.get_par(
+        self.script_file = azcam.api.config.get_par(
             "observe", "script_file", "default", "", "observing_script.txt"
         )
         self.ui.plainTextEdit_filename.setPlainText(self.script_file)
 
-        number_cycles = azcam.db.genpars.get_par(
-            "observe", "number_cycles", "default", "", 1
-        )
+        number_cycles = azcam.api.config.get_par("observe", "number_cycles", "default", "", 1)
         self.number_cycles = int(number_cycles)
         self.ui.spinBox_loops.setValue(self.number_cycles)
 
@@ -181,12 +175,8 @@ class Observe(QMainWindow):
         print("")
         print("Comment lines start with # or !")
         print("")
-        print(
-            "obs        ExposureTime imagetype Title NumberExposures Filter RA DEC Epoch"
-        )
-        print(
-            "test       ExposureTime imagetype Title NumberExposures Filter RA DEC Epoch"
-        )
+        print("obs        ExposureTime imagetype Title NumberExposures Filter RA DEC Epoch")
+        print("test       ExposureTime imagetype Title NumberExposures Filter RA DEC Epoch")
         print("")
         print("stepfocus  RelativeNumberSteps")
         print("steptel    RA_ArcSecs Dec_ArcSecs")
@@ -212,16 +202,17 @@ class Observe(QMainWindow):
 
         return
 
-    def _get_focus(self, focus_id: int = 0,) -> float:
+    def _get_focus(
+        self,
+        focus_id: int = 0,
+    ) -> float:
 
         if self.focus_component == "instrument":
             return azcam.api.instrument.get_focus(focus_id)
         elif self.focus_component == "telescope":
             return azcam.api.telescope.get_focus(focus_id)
 
-    def _set_focus(
-        self, focus_value: float, focus_id: int = 0, focus_type: str = "absolute"
-    ):
+    def _set_focus(self, focus_value: float, focus_id: int = 0, focus_type: str = "absolute"):
 
         if self.focus_component == "instrument":
             return azcam.api.instrument.set_focus(focus_value, focus_id, focus_type)
@@ -292,11 +283,7 @@ class Observe(QMainWindow):
             tokens = azcam.utils.parse(line)
 
             # comment line, special case
-            if (
-                line.startswith("#")
-                or line.startswith("!")
-                or line.startswith("comment")
-            ):
+            if line.startswith("#") or line.startswith("!") or line.startswith("comment"):
                 cmd = "comment"
                 arg = line[1:].strip()
 
@@ -583,7 +570,7 @@ class Observe(QMainWindow):
 
         # get inputs
         if script_file == "prompt":
-            script_file = azcam.db.genpars.get_par(
+            script_file = azcam.api.config.get_par(
                 "observe", "script_file", "default", "Enter script file name", ""
             )
             script_file = azcam.utils.file_browser(
@@ -592,12 +579,12 @@ class Observe(QMainWindow):
             if script_file is not None and script_file != "":
                 script_file = script_file[0]
                 self.script_file = script_file
-                azcam.db.genpars.set_par("observe", "script_file", script_file)
+                azcam.api.config.set_par("observe", "script_file", script_file)
             else:
                 return "ERROR selecting script file"
 
         if number_cycles == "prompt":
-            self.number_cycles = azcam.db.genpars.get_par(
+            self.number_cycles = azcam.api.config.get_par(
                 "observe",
                 "number_cycles",
                 "prompt",
@@ -639,9 +626,7 @@ class Observe(QMainWindow):
         for loop in range(self.number_cycles):
 
             if self.number_cycles > 1:
-                self.log(
-                    "*** Script cycle %d of %d ***" % (loop + 1, self.number_cycles)
-                )
+                self.log("*** Script cycle %d of %d ***" % (loop + 1, self.number_cycles))
 
             # open output file
             with open(self.out_file, "w") as ofile:
@@ -658,9 +643,7 @@ class Observe(QMainWindow):
                     line = command["line"]
                     status = command["status"]
 
-                    self.log(
-                        "Command %03d/%03d: %s" % (linenumber, len(self.commands), line)
-                    )
+                    self.log("Command %03d/%03d: %s" % (linenumber, len(self.commands), line))
 
                     # execute the command
                     reply = self.execute_command(linenumber)
@@ -823,14 +806,9 @@ class Observe(QMainWindow):
             return "OK"
 
         elif cmd == "steptel":
-            self.log(
-                "offsetting telescope in arcsecs - RA: %s, DEC: %s"
-                % (raoffset, decoffset)
-            )
+            self.log("offsetting telescope in arcsecs - RA: %s, DEC: %s" % (raoffset, decoffset))
             try:
-                reply = azcam.api.server.rcommand(
-                    f"telescope.offset {raoffset} {decoffset}"
-                )
+                reply = azcam.api.server.rcommand(f"telescope.offset {raoffset} {decoffset}")
                 return "OK"
             except azcam.AzcamError as e:
                 return f"ERROR {e}"
@@ -895,9 +873,7 @@ class Observe(QMainWindow):
             self.log("Moving telescope now to RA: %s, DEC: %s" % (ra, dec))
             if not self.debug:
                 try:
-                    reply = azcam.api.server.rcommand(
-                        f"telescope.move {ra} {dec} {epoch}"
-                    )
+                    reply = azcam.api.server.rcommand(f"telescope.move {ra} {dec} {epoch}")
                 except azcam.AzcamError as e:
                     return f"ERROR {e}"
 
@@ -964,14 +940,10 @@ class Observe(QMainWindow):
                                     check_header = 1
                                     while check_header:
                                         header_updating = int(
-                                            azcam.api.exposure.get_par(
-                                                "exposureupdatingheader"
-                                            )
+                                            azcam.api.exposure.get_par("exposureupdatingheader")
                                         )
                                         if header_updating:
-                                            self.log(
-                                                "Waiting for header to finish updating..."
-                                            )
+                                            self.log("Waiting for header to finish updating...")
                                             time.sleep(0.5)
                                         else:
                                             check_header = 0
@@ -1060,9 +1032,7 @@ class Observe(QMainWindow):
         self.GuiMode = 1
 
         self.status("Running...")
-        self.number_cycles = (
-            self.ui.spinBox_loops.value()
-        )  # set number of cycles to run script
+        self.number_cycles = self.ui.spinBox_loops.value()  # set number of cycles to run script
 
         my_thread = QtCore.QThread()
         my_thread.start()
@@ -1087,7 +1057,7 @@ class Observe(QMainWindow):
 
         # save pars
         # azcam.utils.update_pars(1, "observe")
-        azcam.db.genpars.parfile_write()
+        azcam.api.config.parfile_write()
 
         return
 
@@ -1103,7 +1073,7 @@ class Observe(QMainWindow):
         )
         self.ui.plainTextEdit_filename.setPlainText(filename[0])
         filename = str(filename[0])
-        azcam.db.genpars.set_par("observe", "script_file", filename)
+        azcam.api.config.set_par("observe", "script_file", filename)
 
         return
 
