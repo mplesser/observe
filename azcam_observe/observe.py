@@ -128,12 +128,14 @@ class Observe(QMainWindow):
         self.timer.start(500)
 
         # set defaults from parfile
-        self.script_file = azcam.api.config.get_par(
+        self.script_file = azcam.api.config.get_script_par(
             "observe", "script_file", "default", "", "observing_script.txt"
         )
         self.ui.plainTextEdit_filename.setPlainText(self.script_file)
 
-        number_cycles = azcam.api.config.get_par("observe", "number_cycles", "default", "", 1)
+        number_cycles = azcam.api.config.get_script_par(
+            "observe", "number_cycles", "default", "", 1
+        )
         self.number_cycles = int(number_cycles)
         self.ui.spinBox_loops.setValue(self.number_cycles)
 
@@ -570,7 +572,7 @@ class Observe(QMainWindow):
 
         # get inputs
         if script_file == "prompt":
-            script_file = azcam.api.config.get_par(
+            script_file = azcam.api.config.get_script_par(
                 "observe", "script_file", "default", "Enter script file name", ""
             )
             script_file = azcam.utils.file_browser(
@@ -579,12 +581,12 @@ class Observe(QMainWindow):
             if script_file is not None and script_file != "":
                 script_file = script_file[0]
                 self.script_file = script_file
-                azcam.api.config.set_par("observe", "script_file", script_file)
+                azcam.api.config.set_script_par("observe", "script_file", script_file)
             else:
                 return "ERROR selecting script file"
 
         if number_cycles == "prompt":
-            self.number_cycles = azcam.api.config.get_par(
+            self.number_cycles = azcam.api.config.get_script_par(
                 "observe",
                 "number_cycles",
                 "prompt",
@@ -1056,7 +1058,7 @@ class Observe(QMainWindow):
         self.status("Run finished")  # clear status box
 
         # save pars
-        # azcam.utils.update_pars(1, "observe")
+        # azcam.api.config.update_pars(1, "observe")
         azcam.api.config.parfile_write()
 
         return
@@ -1073,7 +1075,7 @@ class Observe(QMainWindow):
         )
         self.ui.plainTextEdit_filename.setPlainText(filename[0])
         filename = str(filename[0])
-        azcam.api.config.set_par("observe", "script_file", filename)
+        azcam.api.config.set_script_par("observe", "script_file", filename)
 
         return
 
