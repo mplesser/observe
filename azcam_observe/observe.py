@@ -1059,7 +1059,7 @@ class Observe(QMainWindow):
 
         # save pars
         # azcam.api.config.update_pars(1, "observe")
-        azcam.api.config.parfile_write()
+        azcam.api.config.write_parfile()
 
         return
 
