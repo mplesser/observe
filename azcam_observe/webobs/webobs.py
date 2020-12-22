@@ -87,10 +87,7 @@ class WebObs(object):
 
         return
 
-    def _get_focus(
-        self,
-        focus_id: int = 0,
-    ) -> float:
+    def _get_focus(self, focus_id: int = 0,) -> float:
 
         if self.focus_component == "instrument":
             return azcam.api.instrument.get_focus(focus_id)
@@ -649,9 +646,9 @@ class WebObs(object):
                             return "STOP"
 
                 if cmd != "test":
-                    azcam.api.exposure.set_par("imagetest", 0)
+                    azcam.api.config.set_par("imagetest", 0)
                 else:
-                    azcam.api.exposure.set_par("imagetest", 1)
+                    azcam.api.config.set_par("imagetest", 1)
                 filename = azcam.api.exposure.get_image_filename()
 
                 if cmd == "test":
@@ -680,7 +677,7 @@ class WebObs(object):
                         time.sleep(2)  # wait for Expose process to start
                         cycle = 1
                         while 1:
-                            flag = azcam.api.exposure.get_par("ExposureFlag")
+                            flag = azcam.api.config.get_par("ExposureFlag")
                             if flag is None:
                                 azcam.log("Could not get exposure status, quitting...")
                                 stop = 1
@@ -696,7 +693,7 @@ class WebObs(object):
                                     check_header = 1
                                     while check_header:
                                         header_updating = int(
-                                            azcam.api.exposure.get_par("exposureupdatingheader")
+                                            azcam.api.config.get_par("exposureupdatingheader")
                                         )
                                         if header_updating:
                                             azcam.log("Waiting for header to finish updating...")

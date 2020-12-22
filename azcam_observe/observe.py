@@ -8,7 +8,6 @@ IPython config needs:
 """
 
 import os
-import sys
 import time
 
 import azcam
@@ -24,6 +23,7 @@ class Observe(object):
         super().__init__()
 
         self.debug = 0  #: True to NOT execute commands
+        self._abort_gui = 0  #: internal abort flag to stop
         self.verbose = 1  #: True to print commands during run()
         self.number_cycles = 1  #: Number of times to run the script.
         self.move_telescope_during_readout = 0  #: True to move the telescope during camera readout
@@ -39,18 +39,13 @@ class Observe(object):
         self.current_filter = ""  # current filter
 
         self._abort_script = 0  #: internal abort flag to stop scipt
-        self._abort_gui = 0  #: internal abort flag to stop GUI
-        self._paused = 0  #: internal pause flag
-        self._do_highlight = 0  #: internal highlight row flag
-
-        self.et_scale = 1.0  #: exposure time scale factor
 
         self.data = []  # list of dictionaries for each command to be executed
 
         # focus component for motion - instrument or telescope
         self.focus_component = "instrument"
 
-        self.GuiMode = 0
+        self.gui_mode = 0
 
     def initialize(self):
         """
@@ -97,10 +92,7 @@ class Observe(object):
 
         return
 
-    def _get_focus(
-        self,
-        focus_id: int = 0,
-    ) -> float:
+    def _get_focus(self, focus_id: int = 0,) -> float:
 
         if self.focus_component == "instrument":
             return azcam.api.instrument.get_focus(focus_id)
@@ -353,88 +345,6 @@ class Observe(object):
 
         return
 
-    def update_cell(self, command_number, parameter="", value=""):
-        """
-        Update one parameter of an existing command.
-
-        :param command_number: Number of command to be updated. If -1, return list of possible arguments.
-        :param parameter: Paramater name to be updated.
-        :param value: New value of parameter.
-        :return: None
-        """
-
-        if command_number == -1:
-            pars = []
-            pars.append("line")
-            pars.append("cmdnumber")
-            pars.append("status")
-            pars.append("command")
-            pars.append("argument")
-            pars.append("exptime")
-            pars.append("type")
-            pars.append("title")
-            pars.append("numexp")
-            pars.append("filter")
-            pars.append("focus")
-            pars.append("ra")
-            pars.append("dec")
-            pars.append("ra_next")
-            pars.append("dec_next")
-            pars.append("epoch")
-            pars.append("expose_flag")
-            pars.append("movetel_flag")
-            pars.append("steptel_flag")
-            pars.append("movefilter_flag")
-            pars.append("movefocus_flag")
-
-            return pars
-
-        self.commands[command_number][parameter.lower()] = value
-
-        self.update_table()
-
-        return
-
-    def update_line(self, line_number, line):
-        """
-        Add or update a script line.
-
-        :param line_number: Number of line to be updated or -1 to add at the end of the line buffer.
-        :param line: New string (line). If line is "", then line_number is deleted.
-        :return: None
-        """
-
-        if line_number == -1:
-            self.lines.append(line)
-            return
-
-        if line == "":
-            if line_number < len(self.lines) - 1:
-                self.lines.pop(line_number)
-                return
-
-        self.lines[line_number] = line
-
-        return
-
-    def scale_exptime(self):
-        """
-        Scale the current exposure times.
-        """
-
-        self.status("Working...")
-
-        self.et_scale = float(self.ui.doubleSpinBox_ExpTimeScale.value())
-
-        for cmdnum, cmd in enumerate(self.commands):
-            old = float(cmd["exptime"])
-            new = old * self.et_scale
-            self.update_cell(cmdnum, "exptime", new)
-
-        self.status("")
-
-        return
-
     def log(self, message):
         """
         Log a message.
@@ -533,7 +443,7 @@ class Observe(object):
                         break
 
                     # check for pause
-                    if self.GuiMode:
+                    if self.gui_mode:
                         while self._paused:
                             self.wait4highlight()
                             time.sleep(1)
@@ -558,7 +468,7 @@ class Observe(object):
         """
 
         # wait for highlighting of current row
-        if self.GuiMode:
+        if self.gui_mode:
             self.current_line = linenumber
             self.wait4highlight()
 
@@ -735,9 +645,9 @@ class Observe(object):
                             return "STOP"
 
                 if cmd != "test":
-                    azcam.api.exposure.set_par("imagetest", 0)
+                    azcam.api.config.set_par("imagetest", 0)
                 else:
-                    azcam.api.exposure.set_par("imagetest", 1)
+                    azcam.api.config.set_par("imagetest", 1)
                 filename = azcam.api.exposure.get_image_filename()
 
                 if cmd == "test":
@@ -766,7 +676,7 @@ class Observe(object):
                         time.sleep(2)  # wait for Expose process to start
                         cycle = 1
                         while 1:
-                            flag = azcam.api.exposure.get_par("ExposureFlag")
+                            flag = azcam.api.config.get_par("ExposureFlag")
                             if flag is None:
                                 self.log("Could not get exposure status, quitting...")
                                 stop = 1
@@ -782,7 +692,7 @@ class Observe(object):
                                     check_header = 1
                                     while check_header:
                                         header_updating = int(
-                                            azcam.api.exposure.get_par("exposureupdatingheader")
+                                            azcam.api.config.get_par("exposureupdatingheader")
                                         )
                                         if header_updating:
                                             self.log("Waiting for header to finish updating...")
