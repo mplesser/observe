@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 import azcam
 
 observe = Blueprint(
-    "webobs",
+    "observe",
     __name__,
     static_folder="static_webobs",
     template_folder="",
@@ -20,10 +20,12 @@ observe = Blueprint(
 @observe.route("/observe/upload", methods=["POST"])
 def webobs_upload():
     url = request.url
-    print(url)
+    print("UPLOAD:", url)
     azcam.log(url, prefix="Web-> ")
     f = request.files["file"]
-    f.save(os.path.join(azcam.db.webserver.config["UPLOAD_FOLDER"], secure_filename(f.filename)))
+    f.save(
+        os.path.join(azcam.db.webserver.app.config["UPLOAD_FOLDER"], secure_filename(f.filename))
+    )
     return "OK"
 
 
@@ -38,5 +40,8 @@ def show_webobs(page):
 def load():
     if azcam.db.get("webserver") is not None:
         azcam.db.webserver.app.register_blueprint(observe)
+        azcam.log("Loaded azcam_observe")
+    else:
+        azcam.AzcamWarning("Webserver not found")
 
-    azcam.log("Loaded azcam_observe")
+    return

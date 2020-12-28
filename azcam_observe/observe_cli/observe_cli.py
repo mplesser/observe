@@ -10,10 +10,10 @@ IPython config needs:
 import time
 
 import azcam
-from azcam_observe.observe import Observe
+from azcam_observe.observe_common import ObserveCommon
 
 
-class ObserveCli(Observe):
+class ObserveCli(ObserveCommon):
     """
     The Observe class which implements observing scripts.
 

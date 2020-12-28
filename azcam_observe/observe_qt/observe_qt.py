@@ -16,7 +16,7 @@ from PySide2.QtCore import QTimer, Signal, Slot
 from PySide2.QtWidgets import QApplication, QFileDialog, QMainWindow, QTableWidgetItem
 
 import azcam
-from azcam_observe.observe import Observe
+from azcam_observe.observe_common import ObserveCommon
 from .observe_gui_ui import Ui_observe
 
 
@@ -38,7 +38,7 @@ class GenericWorker(QtCore.QObject):
         self.finished.emit()
 
 
-class ObserveQt(QMainWindow, Observe):
+class ObserveQt(QMainWindow, ObserveCommon):
     """
     The Observe class which implements observing scripts.
 
@@ -50,10 +50,7 @@ class ObserveQt(QMainWindow, Observe):
     def __init__(self):
 
         QMainWindow.__init__(self)
-        Observe.__init__(self)
-
-        self._paused = 0  #: internal pause flag
-        self._do_highlight = 0  #: internal highlight row flag
+        ObserveCommon.__init__(self)
 
         self.et_scale = 1.0  #: exposure time scale factor
 
@@ -502,9 +499,6 @@ class ObserveQt(QMainWindow, Observe):
         self._abort_gui = 1
 
         return
-
-    def observe(self):
-        print("Use 'obscli.observe' to run non-GUI observing scripts")
 
 
 # ****************************************************************

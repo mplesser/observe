@@ -1,10 +1,10 @@
-// Javascript/jQuery code for webobs.html
+// Javascript/jQuery code for observe.html
 
 $(document).ready(function() {
 
     // get_status function which runs on a timer
     function watchdog() {
-        $.getJSON('/api/webobs/watchdog', {}, function(data) {
+        $.getJSON('/api/observe/watchdog', {}, function(data) {
             $("#timestamp").text(data.data.timestamp);
             $("#message").text(data.data.message);
             if (data.data.currentrow > 0) {
@@ -40,7 +40,7 @@ $("#upload_btn").click(function() {
 
 function LoadScript() {
     var scriptname = $("#scriptname").val();
-    var cmd = "/api/webobs/load_script?scriptname=" + scriptname;
+    var cmd = "/api/observe/load_script?scriptname=" + scriptname;
     $("#message").text("Loading script");
     $.getJSON(cmd, {},
         function(data) {
@@ -85,7 +85,7 @@ function LoadScript() {
 }
 
 function RunScript() {
-    var cmd = "/api/webobs/run";
+    var cmd = "/api/observe/run";
     $("#message").text("Running script");
     $.getJSON(cmd, {},
         function(data) {
@@ -98,7 +98,7 @@ function RunScript() {
 };
 
 /* function Upload() {
-    // action = "http://localhost:2403/api/webobs/upload"
+    // action = "http://localhost:2403/api/observe/upload"
     // method = "POST"
     // enctype = "multipart/form-data"
     // alert("upload");
@@ -123,7 +123,7 @@ function Upload() {
     var form_data = new FormData($('#upload_form')[0]);
     $.ajax({
         type: 'POST',
-        url: '/webobs/upload',
+        url: '/observe/upload',
         data: form_data,
         contentType: false,
         cache: false,
