@@ -86,7 +86,7 @@ class WebObs(ObserveCommon):
 
         scriptname = urllib.parse.unquote(scriptname)
         scriptfile = os.path.join(
-            azcam.db.webserver.app.config["upload_folder"], os.path.basename(scriptname)
+            azcam.db.webserver.app.config["UPLOAD_FOLDER"], os.path.basename(scriptname)
         )
         scriptfile = os.path.normpath(scriptfile)
 
