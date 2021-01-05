@@ -7,8 +7,6 @@ IPython config needs:
  c.InteractiveShellApp.pylab = 'qt'
 """
 
-import time
-
 import azcam
 from azcam_observe.observe_common import ObserveCommon
 
