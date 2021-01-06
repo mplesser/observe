@@ -268,7 +268,9 @@ class ObserveQt(QMainWindow, ObserveCommon):
         self.gui_mode = 1
 
         self.status("Running...")
-        self.number_cycles = self.ui.spinBox_loops.value()  # set number of cycles to run script
+        self.number_cycles = (
+            self.ui.spinBox_loops.value()
+        )  # set number of cycles to run script
 
         my_thread = QtCore.QThread()
         my_thread.start()

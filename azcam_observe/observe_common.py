@@ -25,8 +25,12 @@ class ObserveCommon(object):
         self.debug = 0  #: True to NOT execute commands
         self.verbose = 1  #: True to print commands during run()
         self.number_cycles = 1  #: Number of times to run the script.
-        self.move_telescope_during_readout = 0  #: True to move the telescope during camera readout
-        self.increment_status = 0  #: True to increment status count if command in completed
+        self.move_telescope_during_readout = (
+            0  #: True to move the telescope during camera readout
+        )
+        self.increment_status = (
+            0  #: True to increment status count if command in completed
+        )
 
         self._abort_gui = 0  #: internal abort flag to stop
         self._paused = 0  #: internal pause flag
@@ -68,8 +72,12 @@ class ObserveCommon(object):
         print("")
         print("Comment lines start with # or !")
         print("")
-        print("obs        ExposureTime imagetype Title NumberExposures Filter RA DEC Epoch")
-        print("test       ExposureTime imagetype Title NumberExposures Filter RA DEC Epoch")
+        print(
+            "obs        ExposureTime imagetype Title NumberExposures Filter RA DEC Epoch"
+        )
+        print(
+            "test       ExposureTime imagetype Title NumberExposures Filter RA DEC Epoch"
+        )
         print("")
         print("stepfocus  RelativeNumberSteps")
         print("steptel    RA_ArcSecs Dec_ArcSecs")
@@ -105,7 +113,9 @@ class ObserveCommon(object):
         elif self.focus_component == "telescope":
             return azcam.api.telescope.get_focus(focus_id)
 
-    def _set_focus(self, focus_value: float, focus_id: int = 0, focus_type: str = "absolute"):
+    def _set_focus(
+        self, focus_value: float, focus_id: int = 0, focus_type: str = "absolute"
+    ):
 
         if self.focus_component == "instrument":
             return azcam.api.instrument.set_focus(focus_value, focus_id, focus_type)
@@ -173,7 +183,11 @@ class ObserveCommon(object):
             tokens = azcam.utils.parse(line)
 
             # comment line, special case
-            if line.startswith("#") or line.startswith("!") or line.startswith("comment"):
+            if (
+                line.startswith("#")
+                or line.startswith("!")
+                or line.startswith("comment")
+            ):
                 cmd = "comment"
                 arg = line[1:].strip()
 
@@ -384,7 +398,9 @@ class ObserveCommon(object):
         for loop in range(self.number_cycles):
 
             if self.number_cycles > 1:
-                self.log("*** Script cycle %d of %d ***" % (loop + 1, self.number_cycles))
+                self.log(
+                    "*** Script cycle %d of %d ***" % (loop + 1, self.number_cycles)
+                )
 
             # open output file
             with open(self.out_file, "w") as ofile:
@@ -401,7 +417,9 @@ class ObserveCommon(object):
                     line = command["line"]
                     status = command["status"]
 
-                    self.log("Command %03d/%03d: %s" % (linenumber, len(self.commands), line))
+                    self.log(
+                        "Command %03d/%03d: %s" % (linenumber, len(self.commands), line)
+                    )
 
                     # execute the command
                     reply = self.execute_command(linenumber)
@@ -564,9 +582,14 @@ class ObserveCommon(object):
             return "OK"
 
         elif cmd == "steptel":
-            self.log("offsetting telescope in arcsecs - RA: %s, DEC: %s" % (raoffset, decoffset))
+            self.log(
+                "offsetting telescope in arcsecs - RA: %s, DEC: %s"
+                % (raoffset, decoffset)
+            )
             try:
-                reply = azcam.api.server.rcommand(f"telescope.offset {raoffset} {decoffset}")
+                reply = azcam.api.server.rcommand(
+                    f"telescope.offset {raoffset} {decoffset}"
+                )
                 return "OK"
             except azcam.AzcamError as e:
                 return f"ERROR {e}"
@@ -631,7 +654,9 @@ class ObserveCommon(object):
             self.log("Moving telescope now to RA: %s, DEC: %s" % (ra, dec))
             if not self.debug:
                 try:
-                    reply = azcam.api.server.rcommand(f"telescope.move {ra} {dec} {epoch}")
+                    reply = azcam.api.server.rcommand(
+                        f"telescope.move {ra} {dec} {epoch}"
+                    )
                 except azcam.AzcamError as e:
                     return f"ERROR {e}"
 
@@ -698,10 +723,14 @@ class ObserveCommon(object):
                                     check_header = 1
                                     while check_header:
                                         header_updating = int(
-                                            azcam.api.config.get_par("exposureupdatingheader")
+                                            azcam.api.config.get_par(
+                                                "exposureupdatingheader"
+                                            )
                                         )
                                         if header_updating:
-                                            self.log("Waiting for header to finish updating...")
+                                            self.log(
+                                                "Waiting for header to finish updating..."
+                                            )
                                             time.sleep(0.5)
                                         else:
                                             check_header = 0

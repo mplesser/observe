@@ -8,6 +8,7 @@ setup(
     version="20.2",
     description="azcam support for observing scripts",
     long_description=long_description,
+    long_description_content_type="text/markdown",
     author="Michael Lesser",
     author_email="mlesser@arizona.edu",
     keywords="python parameters",
