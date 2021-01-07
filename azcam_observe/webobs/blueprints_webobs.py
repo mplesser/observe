@@ -32,9 +32,7 @@ def webobs_upload():
     azcam.log(url, prefix="Web-> ")
     f = request.files["file"]
     f.save(
-        os.path.join(
-            azcam.db.webserver.app.config["UPLOAD_FOLDER"], secure_filename(f.filename)
-        )
+        os.path.join(azcam.db.webserver.app.config["UPLOAD_FOLDER"], secure_filename(f.filename))
     )
     return "OK"
 

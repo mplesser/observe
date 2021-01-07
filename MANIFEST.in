@@ -1,0 +1,2 @@
+include azcam_observe/webobs/observe.html
+include azcam_observe/webobs/static_webobs/*

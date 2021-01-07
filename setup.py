@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="azcam-observe",
-    version="21.1.1",
+    version="21.1.2",
     description="azcam support for observing scripts",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -15,4 +15,5 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     install_requires=["azcam", "azcam-webserver", "flask", "PySide2"],
+    include_package_data=True,
 )
