@@ -3,7 +3,13 @@
 *observe* is an *azcam* extension for running observing scripts. It can be used
 with a Qt-based GUI or with a command line interface. The Qt GUI uses the *PySide2* package.
 
-### observe command
+## Installation
+
+`pip install azam-observe`
+
+Or download from github: https://github.com/mplesser/azcam-observe.git.
+
+## observe command
 
 The *observe* command is usually executed from an console window. 
 

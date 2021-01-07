@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="azcam-observe",
-    version="20.2",
+    version="21.1.1",
     description="azcam support for observing scripts",
     long_description=long_description,
     long_description_content_type="text/markdown",
