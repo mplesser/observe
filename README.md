@@ -5,7 +5,7 @@ with a Qt-based GUI or with a command line interface. The Qt GUI uses the *PySid
 
 ## Installation
 
-`pip install azam-observe`
+`pip install azcam-observe`
 
 Or download from github: https://github.com/mplesser/azcam-observe.git.
 
